@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: conferly-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DATABASE=conference_management
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:8000/api}
+      - CORS_ORIGINS=["http://localhost:5173","http://localhost:80","http://localhost:3000"]
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-conferly-super-secure-production-jwt-secret-key-2026-xyz987}
+    volumes:
+      - backend-uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: conferly-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend-uploads:
