@@ -74,22 +74,28 @@ UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# Include all API routes under /api
-api_prefix = "/api"
-app.include_router(auth_router, prefix=api_prefix)
-app.include_router(academic_years_router, prefix=api_prefix)
-app.include_router(sections_router, prefix=api_prefix)
-app.include_router(coordinators_router, prefix=api_prefix)
-app.include_router(students_router, prefix=api_prefix)
-app.include_router(conferences_router, prefix=api_prefix)
-app.include_router(applications_router, prefix=api_prefix)
-app.include_router(tracking_router, prefix=api_prefix)
-app.include_router(reports_router, prefix=api_prefix)
-app.include_router(notifications_router, prefix=api_prefix)
-app.include_router(upload_router, prefix=api_prefix)
-app.include_router(papers_router, prefix=api_prefix)
+# Include all API routes under /api and root fallback
+all_routers = [
+    auth_router,
+    academic_years_router,
+    sections_router,
+    coordinators_router,
+    students_router,
+    conferences_router,
+    applications_router,
+    tracking_router,
+    reports_router,
+    notifications_router,
+    upload_router,
+    papers_router,
+]
 
-@app.get("/")
+for r in all_routers:
+    app.include_router(r, prefix="/api")
+    # Also support direct path without /api (e.g. /auth/login as well as /api/auth/login)
+    app.include_router(r, prefix="")
+
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {
         "status": "online",
@@ -98,6 +104,6 @@ def root():
         "documentation": "/docs"
     }
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "healthy", "service": "Conferly"}

@@ -1,7 +1,17 @@
 import axios from 'axios';
 
 // Backend API Base URL strictly sourced from .env (BACKEND_URL)
-const API_BASE_URL = import.meta.env.BACKEND_URL;
+// Automatically normalizes URL to guarantee it points to /api
+const getApiBaseUrl = () => {
+  let url = (import.meta.env.BACKEND_URL || 'http://localhost:8000/api').trim();
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
