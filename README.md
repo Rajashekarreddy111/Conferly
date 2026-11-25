@@ -83,19 +83,6 @@ python -m pytest tests/test_api.py -v
 
 ---
 
-## 🔑 Default Seed Credentials
-
-| Role | Username / Identifier | Password | Notes |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `medurimounika4@gmail.com` | `Cse@1234` | Mounika Meduri (Primary Administrator) |
-| **Admin** | `admin@college.edu` | `admin123` | Dr. Alexander Wright (Superuser) |
-| **Coordinator** | `sarah.jenkins@college.edu` | `coord123` | Prof. Sarah Jenkins (Assigned: `CSE-A`, `CSE-B`) |
-| **Coordinator** | `marcus.vance@college.edu` | `coord123` | Prof. Marcus Vance (Assigned: `CSE-C`) |
-| **Student** | `23C524` (or `devon.lane@college.edu`) | `student123` | Devon Lane (Section `CSE-A`) |
-| **Student** | `23C525` (or `kathryn.murphy@college.edu`) | `student123` | Kathryn Murphy (Section `CSE-A`) |
-| **Student** | `23C526` (or `eleanor.pena@college.edu`) | `student123` | Eleanor Pena (Section `CSE-B`) |
-
----
 
 ## ⚙️ Environment Variables (.env)
 
