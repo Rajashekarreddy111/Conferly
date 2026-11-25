@@ -82,25 +82,3 @@ python -m pytest tests/test_api.py -v
 ```
 
 ---
-
-
-## ⚙️ Environment Variables (.env)
-
-### Frontend (`frontend/.env`)
-```ini
-BACKEND_URL=http://localhost:8000/api
-```
-
-### Backend (`backend/.env`)
-```ini
-APP_ENV=development
-MONGODB_URI=mongodb+srv://rajashekharreddyyerruva_db_user:yUA3W3vFty3PaP91@conferenceproject.ueaqfnw.mongodb.net/
-MONGODB_DATABASE=conference_management
-JWT_SECRET_KEY=conferly-super-secret-jwt-key-2026-production-grade
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-TIMEZONE=UTC
-FRONTEND_URL=http://localhost:5173
-BACKEND_URL=http://localhost:8000/api
-CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173","http://localhost:3000"]
-```
