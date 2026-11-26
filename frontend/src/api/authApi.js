@@ -19,9 +19,43 @@ export const authApi = {
     }
   },
 
+  sendOtp: async ({ email, purpose = 'forgot_password' }) => {
+    try {
+      const response = await apiClient.post('/auth/otp/send', { email, purpose });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to send OTP';
+      throw new Error(msg);
+    }
+  },
+
+  verifyOtp: async ({ email, otp, purpose = 'forgot_password' }) => {
+    try {
+      const response = await apiClient.post('/auth/otp/verify', { email, otp, purpose });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'OTP verification failed';
+      throw new Error(msg);
+    }
+  },
+
+  updatePasswordWithToken: async ({ resetToken, newPassword, confirmPassword }) => {
+    try {
+      const response = await apiClient.post('/auth/password/update', {
+        resetToken,
+        newPassword,
+        confirmPassword,
+      });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Password update failed';
+      throw new Error(msg);
+    }
+  },
+
   forgotPassword: async (email) => {
     try {
-      const response = await apiClient.post('/auth/forgot-password', { email });
+      const response = await apiClient.post('/auth/otp/send', { email, purpose: 'forgot_password' });
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Password reset request failed';
@@ -29,9 +63,13 @@ export const authApi = {
     }
   },
 
-  resetPassword: async ({ token, newPassword }) => {
+  resetPassword: async ({ resetToken, newPassword, confirmPassword }) => {
     try {
-      const response = await apiClient.post('/auth/reset-password', { token, newPassword });
+      const response = await apiClient.post('/auth/password/update', {
+        resetToken,
+        newPassword,
+        confirmPassword,
+      });
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Password reset failed';
@@ -39,9 +77,13 @@ export const authApi = {
     }
   },
 
-  changePassword: async ({ currentPassword, newPassword }) => {
+  changePassword: async ({ resetToken, newPassword, confirmPassword }) => {
     try {
-      const response = await apiClient.post('/auth/change-password', { currentPassword, newPassword });
+      const response = await apiClient.post('/auth/password/update', {
+        resetToken,
+        newPassword,
+        confirmPassword,
+      });
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Password change failed';

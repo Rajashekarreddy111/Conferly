@@ -11,6 +11,8 @@ class ConferenceCreate(BaseModel):
     targetStudents: Optional[List[str]] = []
     creatorName: Optional[str] = "Admin"
     creatorRole: Optional[str] = "admin"
+    venue: Optional[str] = None
+    dates: Optional[str] = None
 
 class ConferenceUpdate(BaseModel):
     fullName: str
@@ -20,6 +22,8 @@ class ConferenceUpdate(BaseModel):
     scope: Optional[str] = "global"
     targetSections: Optional[List[str]] = []
     targetStudents: Optional[List[str]] = []
+    venue: Optional[str] = None
+    dates: Optional[str] = None
 
 class ConferenceResponse(BaseModel):
     id: str
@@ -29,15 +33,25 @@ class ConferenceResponse(BaseModel):
     deadline: str
     createdBy: Optional[str] = "Admin"
     creatorRole: Optional[str] = "admin"
+    creatorId: Optional[str] = None
+    creatorEmail: Optional[str] = None
     createdAt: Optional[str] = None
     scope: str = "global"
     targetSections: Optional[List[str]] = []
     targetStudents: Optional[List[str]] = []
     status: str = "Active"
+    venue: Optional[str] = None
+    dates: Optional[str] = None
+    acceptedCoordinators: Optional[List[str]] = []
+    declinedCoordinators: Optional[List[str]] = []
+    editHistory: Optional[List[dict]] = []
 
 class DuplicateCheckRequest(BaseModel):
     fullName: str
     shortName: str
+    applicationLink: Optional[str] = None
+    venue: Optional[str] = None
+    dates: Optional[str] = None
     excludeId: Optional[str] = None
 
 class DuplicateCheckResponse(BaseModel):
@@ -47,3 +61,7 @@ class DuplicateCheckResponse(BaseModel):
 
 class BulkConferenceImportRequest(BaseModel):
     conferences: List[dict]
+
+class BatchSuggestionActionRequest(BaseModel):
+    action: str  # "accept" or "decline"
+    conferenceIds: List[str]

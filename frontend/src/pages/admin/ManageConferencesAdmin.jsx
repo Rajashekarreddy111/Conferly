@@ -5,6 +5,7 @@ import {
   FileSpreadsheet,
   Edit2,
   Archive,
+  Trash2,
   ExternalLink,
   Search,
   Filter,
@@ -170,6 +171,17 @@ export const ManageConferencesAdmin = ({ isCoordinator = false }) => {
     }
   };
 
+  const handleDelete = async (conf) => {
+    if (!window.confirm(`Are you sure you want to remove "${conf.shortName}"?`)) return;
+    try {
+      const res = await conferencesApi.deleteConference(conf.id);
+      toast.success(res.message || `Conference "${conf.shortName}" removed.`);
+      loadData();
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove conference.');
+    }
+  };
+
   const filteredConferences = conferences.filter((c) => {
     if (filterStatus === 'ALL') return true;
     return c.status === filterStatus;
@@ -271,6 +283,14 @@ export const ManageConferencesAdmin = ({ isCoordinator = false }) => {
               <Archive className="w-3.5 h-3.5" />
             </button>
           )}
+
+          <button
+            onClick={() => handleDelete(row)}
+            title="Delete / Unlink Conference"
+            className="p-1.5 rounded-lg text-neonrose-400 hover:text-white bg-jet-800 hover:bg-neonrose-950/60 border border-jet-600"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },

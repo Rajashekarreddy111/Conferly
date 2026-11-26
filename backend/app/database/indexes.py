@@ -80,6 +80,20 @@ async def init_indexes():
             IndexModel([("section", ASCENDING)]),
             IndexModel([("academicYear", ASCENDING)]),
         ])
+
+        # OTPs (with TTL auto-expiry)
+        await db["otps"].create_indexes([
+            IndexModel([("email", ASCENDING), ("purpose", ASCENDING)]),
+            IndexModel([("createdAt", ASCENDING)]),
+            IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0),
+        ])
+
+        # Password Reset Tokens (Single-use, short-lived)
+        await db["password_reset_tokens"].create_indexes([
+            IndexModel([("resetToken", ASCENDING)], unique=True),
+            IndexModel([("email", ASCENDING)]),
+            IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0),
+        ])
         
         logger.info("Successfully verified and created all MongoDB collection indexes")
     except Exception as e:

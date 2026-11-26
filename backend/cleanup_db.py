@@ -93,6 +93,8 @@ async def cleanup_database():
     if os.path.exists(uploads_dir):
         cleared_files = 0
         for f in os.listdir(uploads_dir):
+            if f == ".gitkeep":
+                continue
             file_path = os.path.join(uploads_dir, f)
             try:
                 if os.path.isfile(file_path):

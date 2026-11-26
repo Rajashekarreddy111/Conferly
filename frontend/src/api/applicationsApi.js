@@ -52,6 +52,7 @@ export const applicationsApi = {
         section: student?.section,
         screenshotProof: uploadResult.fileUrl,
         proofFileName: uploadResult.fileName,
+        cloudinaryPublicId: uploadResult.publicId,
       });
       return response.data;
     } catch (err) {

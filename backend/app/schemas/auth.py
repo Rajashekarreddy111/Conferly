@@ -24,13 +24,37 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+class SendOtpRequest(BaseModel):
+    email: Optional[str] = None
+    purpose: str = "forgot_password"  # "forgot_password" | "change_password"
+
+class SendOtpResponse(BaseModel):
+    message: str
+    cooldownSeconds: int = 60
+
+class VerifyOtpRequest(BaseModel):
+    email: Optional[str] = None
+    otp: str = Field(..., min_length=6, max_length=6)
+    purpose: str = "forgot_password"
+
+class VerifyOtpResponse(BaseModel):
+    message: str
+    resetToken: str
+
+class UpdatePasswordWithTokenRequest(BaseModel):
+    resetToken: str
+    newPassword: str = Field(..., min_length=6)
+    confirmPassword: str = Field(..., min_length=6)
+
 class ForgotPasswordRequest(BaseModel):
     email: str
 
 class ResetPasswordRequest(BaseModel):
-    token: str
+    resetToken: str
     newPassword: str
+    confirmPassword: Optional[str] = None
 
 class ChangePasswordRequest(BaseModel):
-    currentPassword: str
+    resetToken: str
     newPassword: str
+    confirmPassword: Optional[str] = None

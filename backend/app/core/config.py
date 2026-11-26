@@ -57,6 +57,15 @@ class Settings:
     
     # Upload limits
     MAX_UPLOAD_SIZE_MB: int = 5
-    ALLOWED_EXTENSIONS: List[str] = [".png", ".jpg", ".jpeg", ".pdf"]
+    ALLOWED_EXTENSIONS: List[str] = [".png", ".jpg", ".jpeg", ".pdf", ".webp"]
+
+    # Cloudinary Image Storage
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip('"\' ')
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "").strip('"\' ')
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "").strip('"\' ')
+
+    # Brevo Transactional Email Service
+    BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "").strip('"\' ')
+    BREVO_SENDER_EMAIL: str = (os.getenv("BREVO_SENDER_EMAIL") or os.getenv("SENDER_EMAIL", "")).strip('"\' ')
 
 settings = Settings()

@@ -3,12 +3,18 @@ import mimetypes
 from bson import ObjectId
 from fastapi import APIRouter, UploadFile, File, HTTPException, status
 from fastapi.responses import StreamingResponse
-from app.database.connection import get_gridfs, get_database
+from app.database.connection import get_gridfs
+from app.services.cloudinary_service import (
+    upload_image_to_cloudinary,
+    validate_image_file,
+    is_cloudinary_configured,
+)
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 @router.post("/screenshot")
 async def upload_screenshot(
@@ -21,11 +27,26 @@ async def upload_screenshot(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No file uploaded. Expected 'proof' or 'file' form-data field."
         )
-    
+
     filename = upload.filename or "proof_screenshot.png"
     contents = await upload.read()
+    validate_image_file(filename, len(contents))
+
+    # Try uploading to Cloudinary
+    if is_cloudinary_configured():
+        try:
+            cloud_res = await upload_image_to_cloudinary(contents, filename)
+            return {
+                "fileUrl": cloud_res["secure_url"],
+                "fileName": filename,
+                "publicId": cloud_res["public_id"],
+            }
+        except Exception as e:
+            # If Cloudinary raises, check if we should fallback
+            pass
+
+    # Fallback to GridFS / Local disk storage
     content_type = upload.content_type or mimetypes.guess_type(filename)[0] or "image/png"
-    
     file_id = None
     try:
         gridfs = get_gridfs()
@@ -33,20 +54,20 @@ async def upload_screenshot(
         await grid_in.write(contents)
         await grid_in.close()
         file_id = str(grid_in._id)
-    except Exception as e:
-        # Fallback to local disk file storage if GridFS fails
+    except Exception:
         import uuid
         file_id = f"local_{uuid.uuid4().hex}"
         local_path = os.path.join(UPLOAD_DIR, f"{file_id}_{filename}")
         with open(local_path, "wb") as f:
             f.write(contents)
 
-    # Return the file URL and file name
     file_url = f"/api/upload/file/{file_id}"
     return {
         "fileUrl": file_url,
-        "fileName": filename
+        "fileName": filename,
+        "publicId": file_id,
     }
+
 
 @router.get("/file/{file_id}")
 async def get_uploaded_file(file_id: str):
@@ -67,7 +88,7 @@ async def get_uploaded_file(file_id: str):
         gridfs = get_gridfs()
         grid_out = await gridfs.open_download_stream(obj_id)
         content_type = grid_out.metadata.get("contentType", "image/png") if grid_out.metadata else "image/png"
-        
+
         async def file_streamer():
             while chunk := await grid_out.readchunk():
                 yield chunk

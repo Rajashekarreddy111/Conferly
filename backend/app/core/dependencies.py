@@ -85,6 +85,20 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account not found.")
+
+    # Session Invalidation check (e.g. after password change)
+    if user.get("sessionInvalidatedAt") and payload.get("iat"):
+        inv = user["sessionInvalidatedAt"]
+        try:
+            inv_ts = inv.timestamp() if hasattr(inv, "timestamp") else 0
+            if payload["iat"] < int(inv_ts):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session invalidated due to recent password change. Please sign in again.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+        except Exception:
+            pass
         
     if user.get("status") == "Inactive":
         raise HTTPException(
@@ -103,6 +117,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             )
             
     return user
+
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)) -> dict:
+    """
+    Attempts to retrieve current user from token, returns None if credentials missing or invalid.
+    """
+    if not credentials:
+        return None
+    try:
+        return await get_current_user(credentials)
+    except HTTPException:
+        return None
 
 async def require_admin(user: dict = Depends(get_current_user)) -> dict:
     if user.get("role") != "admin":

@@ -9,6 +9,7 @@ class ApplicationSubmitRequest(BaseModel):
     section: Optional[str] = None
     screenshotProof: str
     proofFileName: Optional[str] = None
+    cloudinaryPublicId: Optional[str] = None
 
 class ApplicationResponse(BaseModel):
     id: str
@@ -21,7 +22,9 @@ class ApplicationResponse(BaseModel):
     appliedAt: str
     screenshotProof: str
     proofFileName: Optional[str] = None
+    cloudinaryPublicId: Optional[str] = None
 
 class ScreenshotUploadResponse(BaseModel):
     fileUrl: str
     fileName: str
+    publicId: Optional[str] = None

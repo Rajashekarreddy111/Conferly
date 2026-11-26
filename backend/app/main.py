@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
         db = get_database()
         user_count = await db.users.count_documents({})
         if user_count == 0:
-            logger.info("Database has no users on startup. Automatically seeding default admin, coordinators, and students...")
+            logger.info("Database has no users on startup. Automatically seeding admin credentials...")
             from seed import seed_records
             await seed_records(db)
 

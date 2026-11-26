@@ -20,9 +20,16 @@ export const conferencesApi = {
     }
   },
 
-  checkDuplicate: async ({ fullName, shortName, excludeId = null }) => {
+  checkDuplicate: async ({ fullName, shortName, applicationLink, venue, dates, excludeId = null }) => {
     try {
-      const response = await apiClient.post('/conferences/check-duplicate', { fullName, shortName, excludeId });
+      const response = await apiClient.post('/conferences/check-duplicate', {
+        fullName,
+        shortName,
+        applicationLink,
+        venue,
+        dates,
+        excludeId,
+      });
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Duplicate check failed';
@@ -39,6 +46,8 @@ export const conferencesApi = {
     targetSections = [],
     creatorName = 'Admin',
     creatorRole = 'admin',
+    venue = null,
+    dates = null,
   }) => {
     const cleanDeadline = normalizeDateInput(deadline);
 
@@ -52,6 +61,8 @@ export const conferencesApi = {
         targetSections,
         creatorName,
         creatorRole,
+        venue,
+        dates,
       });
       return response.data;
     } catch (err) {
@@ -60,7 +71,7 @@ export const conferencesApi = {
     }
   },
 
-  updateConference: async (id, { fullName, shortName, applicationLink, deadline, scope, targetSections }) => {
+  updateConference: async (id, { fullName, shortName, applicationLink, deadline, scope, targetSections, venue, dates }) => {
     const cleanDeadline = normalizeDateInput(deadline);
 
     try {
@@ -71,10 +82,22 @@ export const conferencesApi = {
         deadline: cleanDeadline,
         scope,
         targetSections,
+        venue,
+        dates,
       });
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Failed to update conference';
+      throw new Error(msg);
+    }
+  },
+
+  deleteConference: async (id) => {
+    try {
+      const response = await apiClient.delete(`/conferences/${id}`);
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to delete or unlink conference';
       throw new Error(msg);
     }
   },
@@ -85,6 +108,49 @@ export const conferencesApi = {
       return response.data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Failed to archive conference';
+      throw new Error(msg);
+    }
+  },
+
+  getSuggestions: async () => {
+    try {
+      const response = await apiClient.get('/conferences/suggestions');
+      return response.data || [];
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to fetch conference suggestions';
+      throw new Error(msg);
+    }
+  },
+
+  acceptSuggestion: async (id) => {
+    try {
+      const response = await apiClient.post(`/conferences/${id}/accept`);
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to accept conference suggestion';
+      throw new Error(msg);
+    }
+  },
+
+  declineSuggestion: async (id) => {
+    try {
+      const response = await apiClient.post(`/conferences/${id}/decline`);
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to decline conference suggestion';
+      throw new Error(msg);
+    }
+  },
+
+  batchSuggestionAction: async (action, conferenceIds) => {
+    try {
+      const response = await apiClient.post('/conferences/suggestions/batch', {
+        action,
+        conferenceIds,
+      });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to process batch suggestion action';
       throw new Error(msg);
     }
   },
