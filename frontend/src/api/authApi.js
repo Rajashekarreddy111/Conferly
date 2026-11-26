@@ -90,4 +90,17 @@ export const authApi = {
       throw new Error(msg);
     }
   },
+
+  changeEmailOnce: async ({ newEmail, currentPassword }) => {
+    try {
+      const response = await apiClient.post('/auth/change-email-once', {
+        newEmail,
+        currentPassword,
+      });
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to update email address';
+      throw new Error(msg);
+    }
+  },
 };

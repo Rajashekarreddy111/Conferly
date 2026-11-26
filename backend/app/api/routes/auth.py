@@ -16,6 +16,8 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     ChangePasswordRequest,
+    ChangeEmailOnceRequest,
+    ChangeEmailOnceResponse,
 )
 from app.schemas.common import MessageResponse
 from app.services.otp_service import request_otp, verify_otp, consume_reset_token
@@ -129,7 +131,8 @@ async def login(req: LoginRequest):
         section=user.get("section"),
         academicYear=user.get("academicYear"),
         assignedSections=user.get("assignedSections", []),
-        status=user.get("status", "Active")
+        status=user.get("status", "Active"),
+        emailChangedOnce=bool(user.get("emailChangedOnce", False))
     )
 
     return LoginResponse(
@@ -155,7 +158,8 @@ async def get_my_profile(current_user: dict = Depends(get_current_user)):
         section=current_user.get("section"),
         academicYear=current_user.get("academicYear"),
         assignedSections=current_user.get("assignedSections", []),
-        status=current_user.get("status", "Active")
+        status=current_user.get("status", "Active"),
+        emailChangedOnce=bool(current_user.get("emailChangedOnce", False))
     )
 
 # =========================================================================
@@ -346,4 +350,126 @@ async def change_password_legacy(req: ChangePasswordRequest):
             newPassword=req.newPassword,
             confirmPassword=req.confirmPassword or req.newPassword
         )
+    )
+
+@router.post("/change-email-once", response_model=ChangeEmailOnceResponse)
+async def change_email_once(
+    req: ChangeEmailOnceRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Enables administrators and faculty coordinators to update their account email ONCE after login.
+    Enforces password verification, global email uniqueness, and permanent lock once changed.
+    """
+    role = (current_user.get("role") or "").lower()
+    if role not in ["admin", "coordinator", "mentor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators and faculty coordinators are permitted to change their email."
+        )
+
+    if current_user.get("emailChangedOnce", False):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already changed your email address once. Further modifications are prohibited."
+        )
+
+    db = get_database()
+    clean_new_email = str(req.newEmail).strip().lower()
+    current_email = str(current_user.get("email", "")).strip().lower()
+
+    if not clean_new_email or "@" not in clean_new_email or "." not in clean_new_email.split("@")[-1]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide a valid email address format."
+        )
+
+    if clean_new_email == current_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New email address must be different from your current email address."
+        )
+
+    # Verify current password
+    stored_hash = current_user.get("passwordHash") or current_user.get("password_hash") or current_user.get("hashedPassword") or current_user.get("password")
+    if not stored_hash or not verify_password(req.currentPassword, stored_hash):
+        if req.currentPassword != stored_hash:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect account password. Verification failed."
+            )
+
+    # Check uniqueness across all collections (users, coordinators, students)
+    existing_user = await db["users"].find_one({"email": clean_new_email})
+    existing_coord = await db["coordinators"].find_one({"email": clean_new_email})
+    existing_student = await db["students"].find_one({"email": clean_new_email})
+
+    if existing_user or existing_coord or existing_student:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"The email address '{clean_new_email}' is already registered in the system."
+        )
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    user_id = str(current_user.get("id") or current_user.get("_id"))
+
+    # Update in users collection
+    await db["users"].update_many(
+        {"$or": [{"_id": current_user.get("_id")}, {"id": user_id}, {"email": current_email}]},
+        {"$set": {
+            "email": clean_new_email,
+            "emailChangedOnce": True,
+            "emailChangedAt": now_str,
+            "previousEmail": current_email
+        }}
+    )
+
+    # If coordinator, also update in coordinators collection & conferences creatorEmail
+    if role in ["coordinator", "mentor"]:
+        await db["coordinators"].update_many(
+            {"$or": [{"_id": current_user.get("_id")}, {"id": user_id}, {"email": current_email}]},
+            {"$set": {
+                "email": clean_new_email,
+                "emailChangedOnce": True,
+                "emailChangedAt": now_str,
+                "previousEmail": current_email
+            }}
+        )
+        await db["conferences"].update_many(
+            {"creatorEmail": current_email},
+            {"$set": {"creatorEmail": clean_new_email}}
+        )
+
+    # Issue a new JWT access token reflecting the updated email
+    new_token = create_access_token(
+        subject=clean_new_email,
+        role=role,
+        user_id=user_id,
+        extra_claims={
+            "name": current_user.get("name", "User"),
+            "email": clean_new_email,
+            "section": current_user.get("section"),
+            "rollNumber": current_user.get("rollNumber")
+        }
+    )
+
+    user_resp = UserResponse(
+        id=user_id,
+        name=current_user.get("name", "User"),
+        email=clean_new_email,
+        role=role,
+        phoneNumber=current_user.get("phoneNumber"),
+        rollNumber=current_user.get("rollNumber"),
+        section=current_user.get("section"),
+        academicYear=current_user.get("academicYear"),
+        assignedSections=current_user.get("assignedSections", []),
+        status=current_user.get("status", "Active"),
+        emailChangedOnce=True
+    )
+
+    return ChangeEmailOnceResponse(
+        success=True,
+        message="Email address successfully updated. This change is permanent and can only be performed once.",
+        user=user_resp,
+        token=new_token
     )

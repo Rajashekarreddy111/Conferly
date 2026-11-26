@@ -14,6 +14,7 @@ import {
   Clock,
   CheckCircle2,
   FileText,
+  Mail,
 } from 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { StatCard } from '../../components/common/StatCard';
@@ -22,8 +23,10 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { reportsApi } from '../../api/reportsApi';
 import { conferencesApi } from '../../api/conferencesApi';
 import { formatDate, getTimeRemaining } from '../../utils/dateUtils';
+import { useAuth } from '../../context/AuthContext';
 
 export const AdminDashboard = () => {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [recentConferences, setRecentConferences] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +81,30 @@ export const AdminDashboard = () => {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Post-login One-time Email Change Notice */}
+          {!user?.emailChangedOnce && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-jet-900 border border-purple-500/40 shadow-glow-purple/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-900/60 text-purple-300 shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">One-Time Email Update Available</h4>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    You have an option to update your administrator email address once after login. Current: <span className="text-purple-300 font-mono font-semibold">{user?.email}</span>
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin/settings"
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shrink-0 flex items-center justify-center gap-1.5 transition-all shadow-glow-purple/20"
+              >
+                <span>Change Email</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
+
           {/* Top Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard

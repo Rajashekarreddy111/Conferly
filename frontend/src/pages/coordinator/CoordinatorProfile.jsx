@@ -1,6 +1,7 @@
 import React from 'react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ChangePasswordWithOtp } from '../../components/common/ChangePasswordWithOtp';
+import { ChangeEmailOnce } from '../../components/common/ChangeEmailOnce';
 import { useAuth } from '../../context/AuthContext';
 
 export const CoordinatorProfile = () => {
@@ -9,7 +10,7 @@ export const CoordinatorProfile = () => {
   return (
     <DashboardLayout
       title="Coordinator Profile & Security"
-      subtitle="View your faculty assignment authorizations and update your access password"
+      subtitle="View your faculty assignment authorizations and update your access credentials"
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Profile Overview */}
@@ -44,9 +45,13 @@ export const CoordinatorProfile = () => {
           </div>
         </div>
 
-        {/* Right 2 cols: Change Password With OTP */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-jet-900 border border-jet-700/60 shadow-card-dark">
-          <ChangePasswordWithOtp />
+        {/* Right 2 cols: Change Email & Password */}
+        <div className="lg:col-span-2 space-y-6">
+          <ChangeEmailOnce />
+
+          <div className="p-6 rounded-2xl bg-jet-900 border border-jet-700/60 shadow-card-dark">
+            <ChangePasswordWithOtp />
+          </div>
         </div>
       </div>
     </DashboardLayout>

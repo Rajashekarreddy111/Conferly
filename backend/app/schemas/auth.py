@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 class UserResponse(BaseModel):
@@ -12,6 +12,7 @@ class UserResponse(BaseModel):
     academicYear: Optional[str] = None
     assignedSections: Optional[List[str]] = None
     status: str = "Active"
+    emailChangedOnce: bool = False
 
 class LoginRequest(BaseModel):
     identifier: str
@@ -58,3 +59,13 @@ class ChangePasswordRequest(BaseModel):
     resetToken: str
     newPassword: str
     confirmPassword: Optional[str] = None
+
+class ChangeEmailOnceRequest(BaseModel):
+    newEmail: str
+    currentPassword: str
+
+class ChangeEmailOnceResponse(BaseModel):
+    success: bool = True
+    message: str
+    user: UserResponse
+    token: str

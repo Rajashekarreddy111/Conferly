@@ -2,6 +2,7 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ChangePasswordWithOtp } from '../../components/common/ChangePasswordWithOtp';
+import { ChangeEmailOnce } from '../../components/common/ChangeEmailOnce';
 import { useAuth } from '../../context/AuthContext';
 
 export const AdminSettings = () => {
@@ -13,8 +14,10 @@ export const AdminSettings = () => {
       subtitle="Manage administrator identity, credentials, and institutional access control configurations"
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Change Password With OTP */}
-        <div className="lg:col-span-2">
+        {/* Left 2 Cols: Email & Password Security */}
+        <div className="lg:col-span-2 space-y-6">
+          <ChangeEmailOnce />
+
           <div className="p-6 rounded-2xl bg-jet-900 border border-jet-700/60 shadow-card-dark">
             <ChangePasswordWithOtp />
           </div>
